@@ -6,7 +6,7 @@
 
 long long throws(long long n, int rank){
     //seed rand()
-    time_t t;
+    time_t t = time(NULL);
     srand(t+rank);
     //making sure seed is unique
     //printf("%ld ", rank+t);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
         //Was using to check if all local_hits were included in total_hits
         //printf("%llu ", total_hits);
         long double pi_estimate = ((long double)total_hits/(long double)num_throws)*4;
-        printf("%.7Lf\n", pi_estimate);
+        printf("%.10Lf\n", pi_estimate);
     }
     MPI_Finalize();
     return 0;
