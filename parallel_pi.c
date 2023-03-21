@@ -113,7 +113,7 @@ int main(int argc, char *argv[]){
         //Was using to check if all local_hits were included in total_hits
         //printf("%llu ", total_hits);
         long double pi_estimate = ((long double)total_hits/(long double)num_throws)*4;
-        printf("%.10Lf\n", pi_estimate);
+        printf("%.15Lf\n", pi_estimate);
     }
     MPI_Finalize();
     return 0;
