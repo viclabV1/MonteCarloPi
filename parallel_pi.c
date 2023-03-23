@@ -10,10 +10,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
 #include <time.h>
 #include <math.h>
-
+#include <pthread.h>
 /**
  * @brief The actual Monte Carlo alogithm
  * 
@@ -77,19 +76,8 @@ long long throws(long long n, int rank){
 */
 int main(int argc, char *argv[]){
     time_t start;
-    /**
-     * @brief MPI initialization and setup
-     * @code
-     * int size, rank; 
-     * MPI_Init(NULL,NULL);
-     * MPI_Comm_size(MPI_COMM_WORLD, &size);
-     * MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-     * @endcode
-    */
+ 
     int size, rank; 
-    MPI_Init(NULL,NULL);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     
     if(rank==0){
         start = time(NULL);
@@ -103,14 +91,9 @@ int main(int argc, char *argv[]){
     local_hits=throws(num_throws_per, rank);
     //printf("%llu ", local_hits);
 
-    /**
-     * @brief Use of MPI_Reduce
-     * @code MPI_Reduce(&local_hits, &total_hits, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-     * @endcode
-     *  
-    */
 
-    MPI_Reduce(&local_hits, &total_hits, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+    
+
     
     if(rank==0){
         //Was using to check if all local_hits were included in total_hits
@@ -119,7 +102,6 @@ int main(int argc, char *argv[]){
         printf("%.15Lf\n", pi_estimate);
         printf("%f\n", (double)(time(NULL)-start));
     }
-    MPI_Finalize();
     return 0;
 }
 
