@@ -76,8 +76,7 @@ long long throws(long long n, int rank){
  * @return 0 on success
 */
 int main(int argc, char *argv[]){
-    
-
+    time_t start;
     /**
      * @brief MPI initialization and setup
      * @code
@@ -92,6 +91,10 @@ int main(int argc, char *argv[]){
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     
+    if(rank==0){
+        start = time(NULL);
+    }
+
     long long num_throws=strtoll(argv[1], NULL, 10);
     long long num_throws_per=num_throws/size;
 
@@ -114,6 +117,7 @@ int main(int argc, char *argv[]){
         //printf("%llu ", total_hits);
         long double pi_estimate = ((long double)total_hits/(long double)num_throws)*4;
         printf("%.15Lf\n", pi_estimate);
+        printf("%f\n", (double)(time(NULL)-start));
     }
     MPI_Finalize();
     return 0;
