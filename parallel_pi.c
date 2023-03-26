@@ -4,7 +4,7 @@
 * @author Victor LaBrie
 * @date 20 March 2023
 * @brief Monte Carlo algorithm for calculating pi 
-*implemented in c using MPI.
+*implemented in c using pthreads.
 */
 
 
@@ -75,26 +75,26 @@ long long throws(long long n, int rank){
  * @return 0 on success
 */
 int main(int argc, char *argv[]){
-    time_t start;
- 
-    int size, rank; 
+    //TODO
+    //TIMING
+    //GET ARGUMENTS
+    //call functions
+    //mutex stuff
     
-    if(rank==0){
-        start = time(NULL);
-    }
+    time_t start;
+    
+
+
+    if(rank
 
     long long num_throws=strtoll(argv[1], NULL, 10);
-    long long num_throws_per=num_throws/size;
+    //long long num_throws_per=num_throws/size;
 
     long long local_hits;
     long long total_hits;
-    local_hits=throws(num_throws_per, rank);
+    //local_hits=throws(num_throws_per, rank);
     //printf("%llu ", local_hits);
 
-
-    
-
-    
     if(rank==0){
         //Was using to check if all local_hits were included in total_hits
         //printf("%llu ", total_hits);
