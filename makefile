@@ -1,6 +1,6 @@
 parallel_pi:
 	doxygen ./Doxyfile;
-	mpicc -O3 -Wall -o parallel_pi parallel_pi.c -lm
+	gcc -g -Wall -o parallel_pi parallel_pi.c -lm -lpthread
 
 clean:
 	rm ./parallel_pi

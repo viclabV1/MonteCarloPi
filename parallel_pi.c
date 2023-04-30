@@ -2,17 +2,17 @@
 * @mainpage See files
 * @file parallel_pi.c
 * @author Victor LaBrie
-* @date 20 March 2023
+* @date 29 April 2023
 * @brief Monte Carlo algorithm for calculating pi 
-*implemented in c using MPI.
+*implemented in c using PThreads.
 */
 
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
 #include <time.h>
 #include <math.h>
+#include <pthread.h>
 
 /**
  * @brief The actual Monte Carlo alogithm
@@ -26,8 +26,60 @@
  * @param rank : rank of process calling function, important for srand seed 
  * @return returns long long int representing number of hits
 */
-long long throws(long long n, int rank){
+
+//global variables
+long long total_hits=0;
+long randOffset=0;
+pthread_mutex_t mutex;
+
+
+
+void* throws(void* n_p);
+
+/**
+ * @brief main function
+ * @param argc
+ * @param argv
+ * @return 0 on success
+*/
+    int main(int argc, char *argv[]){
+    time_t start; 
+
+    start = time(NULL);
+    long thread_count=strtol(argv[1],NULL,10);
+    long long num_throws=strtoll(argv[2], NULL, 10);
+    long long num_throws_per=num_throws/thread_count;
+
+    //printf("%llu ", local_hits);
+
+    /**
+     * @brief pthread stuff
+     * @endcode
+     *  
+    */
     
+    pthread_mutex_init(&mutex,NULL);
+    pthread_t* thread_arr = (pthread_t*) malloc (thread_count*sizeof(pthread_t));
+
+
+    for(long thread=0; thread<thread_count; thread++){
+        pthread_create(&thread_arr[thread], NULL, throws, (void*)num_throws_per);
+    }
+
+    for(long thread=0; thread<thread_count; thread++){
+        pthread_join(thread_arr[thread],NULL);
+    }
+
+
+    pthread_mutex_destroy(&mutex);
+    long double pi_estimate = ((long double)total_hits/(long double)num_throws)*4;
+    printf("%.15Lf\n", pi_estimate);
+    printf("%f\n", (double)(time(NULL)-start));
+    free(thread_arr);
+    return 0;
+    }
+
+void* throws(void* n_p){
     /**
      * @brief time and rank to seed the random number generator.
      * @code 
@@ -36,9 +88,14 @@ long long throws(long long n, int rank){
      * @endcode
     */
     
+    long long n = (long long)n_p;
+    
+    //unique rand seeds for each thread
     time_t t = time(NULL);
-    srand(t+rank);
-    //making sure seed is unique
+    pthread_mutex_lock(&mutex);
+    srand(t+randOffset);
+    randOffset++;
+    pthread_mutex_unlock(&mutex);
     //printf("%ld ", rank+t);
 
     /**
@@ -63,64 +120,12 @@ long long throws(long long n, int rank){
         distance_squared = (x*x)+(y*y);
         if(distance_squared<=1) in_circle++;
     }
-    return in_circle;
+  
+    pthread_mutex_lock(&mutex);
+    total_hits += in_circle;
+    pthread_mutex_unlock(&mutex);
+
+    return NULL;
     //double pi_estimate = ((double)in_circle/(double)toss) * 4;
     //printf("%f", pi_estimate);
 }
-
-
-/**
- * @brief main function, handles mpi communication and management
- * @param argc
- * @param argv
- * @return 0 on success
-*/
-int main(int argc, char *argv[]){
-    time_t start;
-    /**
-     * @brief MPI initialization and setup
-     * @code
-     * int size, rank; 
-     * MPI_Init(NULL,NULL);
-     * MPI_Comm_size(MPI_COMM_WORLD, &size);
-     * MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-     * @endcode
-    */
-    int size, rank; 
-    MPI_Init(NULL,NULL);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
-    if(rank==0){
-        start = time(NULL);
-    }
-
-    long long num_throws=strtoll(argv[1], NULL, 10);
-    long long num_throws_per=num_throws/size;
-
-    long long local_hits;
-    long long total_hits;
-    local_hits=throws(num_throws_per, rank);
-    //printf("%llu ", local_hits);
-
-    /**
-     * @brief Use of MPI_Reduce
-     * @code MPI_Reduce(&local_hits, &total_hits, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-     * @endcode
-     *  
-    */
-
-    MPI_Reduce(&local_hits, &total_hits, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-    
-    if(rank==0){
-        //Was using to check if all local_hits were included in total_hits
-        //printf("%llu ", total_hits);
-        long double pi_estimate = ((long double)total_hits/(long double)num_throws)*4;
-        printf("%.15Lf\n", pi_estimate);
-        printf("%f\n", (double)(time(NULL)-start));
-    }
-    MPI_Finalize();
-    return 0;
-}
-
-
